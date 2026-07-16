@@ -1,0 +1,297 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #eef2f7;
+    color: #1e293b;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 28pt;
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    margin-top: 8px;
+    opacity: 0.85;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.camera-section, .logs-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.video-container {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+}
+
+video {
+    width: 100%;
+    height: auto;
+    display: block;
+    transform: scaleX(-1); /* Ko'zguga o'xshab ko'rsatish */
+}
+
+.overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: opacity 0.5s ease;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.status-card {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    border-left: 5px solid #94a3b8;
+    transition: all 0.3s ease;
+}
+
+.status-card.waiting {
+    border-left-color: #64748b;
+}
+
+.status-card.success {
+    border-left-color: #16a34a;
+    background: #ecfdf3;
+}
+
+.status-card.unknown {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+}
+
+.status-icon {
+    font-size: 28pt;
+}
+
+.status-text h2 {
+    font-size: 14pt;
+}
+
+.status-text p {
+    font-size: 10pt;
+    color: #475569;
+    margin-top: 2px;
+}
+
+.excel-panel {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+    flex-wrap: wrap;
+}
+
+.excel-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10pt;
+    font-weight: 600;
+}
+
+.excel-status.not-connected {
+    color: #94a3b8;
+}
+
+.excel-status.connected {
+    color: #16a34a;
+}
+
+.excel-download-btn {
+    background: #16a34a;
+    color: white;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 9.5pt;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.excel-download-btn:hover {
+    background: #15803d;
+}
+
+.excel-icon {
+    font-size: 14pt;
+}
+
+.mebel-link {
+    margin-top: 15px;
+}
+
+.mebel-link.hidden {
+    display: none;
+}
+
+.mebel-link-btn {
+    display: block;
+    text-align: center;
+    background: #7c3aed;
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.mebel-link-btn:hover {
+    background: #6d28d9;
+}
+
+.lunch-report {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border-left: 5px solid #f97316;
+}
+
+.lunch-report.hidden {
+    display: none;
+}
+
+.lunch-icon {
+    font-size: 26pt;
+}
+
+.lunch-text h3 {
+    font-size: 12pt;
+    color: #9a3412;
+}
+
+.lunch-text p {
+    font-size: 10pt;
+    color: #7c2d12;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+.logs-section h2 {
+    font-size: 14pt;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+}
+
+th {
+    text-align: left;
+    padding: 10px 8px;
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+
+.empty-row {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.late-cell {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.late-cell.none {
+    color: #16a34a;
+    font-weight: 400;
+}
+
+.fine-cell {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.fine-cell.none {
+    color: #94a3b8;
+    font-weight: 400;
+}

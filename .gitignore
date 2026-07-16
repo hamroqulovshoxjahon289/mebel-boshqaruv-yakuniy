@@ -1,0 +1,8 @@
+node_modules/
+davomat.xlsx
+mebel-data.json
+ishlab_chiqarish.xlsx
+yuk-data/
+yuk-manifest.xlsx
+.env
+.DS_Store

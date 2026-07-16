@@ -1,0 +1,15 @@
+{
+  "name": "face-id-attendance",
+  "version": "1.0.0",
+  "description": "Yuz orqali davomat, ishlab chiqarish jurnali va yuk manifest tizimlari birlashtirilgan (Excelga avtomatik yozadi)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "exceljs": "^4.4.0",
+    "dotenv": "^16.4.5",
+    "xlsx": "^0.18.5"
+  }
+}

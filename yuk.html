@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Yuk Manifest — jo'natish jadvali</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="yuk-style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">◈</span>
+    <div class="brand-text">
+      <h1>Yuk Manifest</h1>
+      <p>jo'natish jadvali</p>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="🔍 Qidirish: mijoz, manzil, telefon, zborshik, labo..." />
+  </div>
+
+  <div class="week-nav">
+    <button id="prevWeek" class="nav-btn" title="1 kun orqaga">‹</button>
+    <div class="week-label" id="weekLabel">—</div>
+    <button id="nextWeek" class="nav-btn" title="1 kun oldinga">›</button>
+    <button id="todayBtn" class="today-btn">Bugun</button>
+  </div>
+
+  <div class="topbar-actions">
+    <a href="/" class="ghost-btn">🎥 Davomat</a>
+    <a href="/mebel.html" class="ghost-btn">🏭 Ishlab chiqarish</a>
+    <button id="teamBtn" class="ghost-btn">👥 Jamoa</button>
+    <a id="excelExportBtn" class="ghost-btn" href="/api/export/excel">⬇️ Excel</a>
+    <button id="reportBtn" class="ghost-btn">📊 Hisobot</button>
+    <button id="addLoadTopBtn" class="primary-btn">+ Yuk qo'shish</button>
+  </div>
+</header>
+
+<main id="board" class="board">
+  <!-- kun ustunlari JS orqali chiziladi -->
+</main>
+
+<!-- ============ YUK QO'SHISH / TAHRIRLASH MODAL ============ -->
+<div id="formModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="formModalTitle">Yangi yuk</h2>
+      <button class="icon-btn close-modal">✕</button>
+    </div>
+
+    <form id="loadForm" class="modal-body">
+      <input type="hidden" id="loadId" />
+
+      <div class="section-label">Mahsulot</div>
+      <div class="field-row three">
+        <label>Kategoriya
+          <select id="f_kategoriya" required></select>
+        </label>
+        <label>Nomi (xohlagan nom)
+          <input type="text" id="f_nomi" placeholder="masalan: Malika, Diyor..." required />
+        </label>
+        <label>Rang
+          <select id="f_rang" required></select>
+        </label>
+      </div>
+
+      <div class="field-row" id="matrasRow" style="display:none">
+        <label class="checkbox-label">
+          <input type="checkbox" id="f_matras_bor" />
+          Matras qo'shilsinmi?
+        </label>
+        <label id="matrasTuriWrap" style="display:none">Matras o'lchami
+          <select id="f_matras_turi">
+            <option value="Pol artaped">Pol artaped</option>
+            <option value="Artaped">Artaped</option>
+            <option value="Super artaped">Super artaped</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label>Izoh (ixtiyoriy)
+          <input type="text" id="f_izoh" placeholder="masalan: mijoz maxsus talabi..." />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="narrow">Jo'natish sanasi
+          <input type="date" id="f_sana" required />
+        </label>
+        <label class="narrow">Holat
+          <select id="f_holat">
+            <option value="yashil">🟢 Yashil — tayyor</option>
+            <option value="sariq">🟡 Sariq — kutilmoqda</option>
+            <option value="qizil">🔴 Qizil — muammo</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="section-label">Manzil</div>
+      <div class="field-row">
+        <label>Hudud / mahalla / ko'cha
+          <input type="text" id="f_hudud" placeholder="masalan: Chilonzor, 15-kvartal" />
+        </label>
+      </div>
+      <div class="field-row three">
+        <label>Dom
+          <input type="text" id="f_dom" placeholder="12" />
+        </label>
+        <label>Padyez
+          <input type="text" id="f_padyez" placeholder="3" />
+        </label>
+        <label>Etaj
+          <input type="text" id="f_etaj" placeholder="5" />
+        </label>
+      </div>
+
+      <div class="section-label">To'lov</div>
+      <div class="field-row">
+        <label>Astatka / qoldiq (so'm)
+          <input type="number" id="f_astatka" placeholder="1200000" min="0" />
+        </label>
+      </div>
+
+      <div class="section-label">Mijoz telefonlari</div>
+      <div class="field-row">
+        <label>1-nomer
+          <input type="tel" id="f_tel1" placeholder="+998 90 123 45 67" />
+        </label>
+        <label>2-nomer
+          <input type="tel" id="f_tel2" placeholder="+998 91 234 56 78" />
+        </label>
+      </div>
+
+      <div class="section-label">Yuklovchi jamoa</div>
+      <div class="field-row">
+        <label>Zborshik
+          <select id="f_zborshik"></select>
+        </label>
+        <label>Labo (mashina)
+          <select id="f_labo"></select>
+        </label>
+      </div>
+
+      <div class="section-label">Xavfsizlik</div>
+      <div class="field-row" id="addCodeRow">
+        <label>Qo'shish kodi
+          <input type="password" inputmode="numeric" id="f_adminCode" placeholder="admin kodi" />
+        </label>
+        <label>Yangi PIN o'ylab toping
+          <input type="password" inputmode="numeric" id="f_pin_new" placeholder="kamida 4 raqam" />
+        </label>
+      </div>
+      <div class="field-row" id="editCodeRow" style="display:none">
+        <label>Tahrirlash uchun shu yukning PIN kodi
+          <input type="password" inputmode="numeric" id="f_pin_edit" placeholder="PIN" />
+        </label>
+      </div>
+
+      <p class="form-error" id="formError"></p>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn close-modal">Bekor qilish</button>
+        <button type="submit" class="primary-btn" id="formSubmitBtn">Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ YUK TAFSILOTI MODAL ============ -->
+<div id="viewModal" class="modal-overlay hidden">
+  <div class="modal view-modal">
+    <div class="modal-head">
+      <h2 id="viewTitle">Yuk</h2>
+      <button class="icon-btn close-modal">✕</button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+
+    <div class="quick-assign">
+      <div class="quick-assign-row">
+        <label>🧰 Zborshikni almashtirish (kodsiz)
+          <select id="quickZborshik"></select>
+        </label>
+        <button class="ghost-btn small-btn" id="quickZborshikSave">Saqlash</button>
+      </div>
+      <div class="quick-assign-row">
+        <label>🚚 Laboni almashtirish (kodsiz)
+          <select id="quickLabo"></select>
+        </label>
+        <button class="ghost-btn small-btn" id="quickLaboSave">Saqlash</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="danger-btn" id="deleteLoadBtn">O'chirish</button>
+      <button class="ghost-btn" id="editLoadBtn">Tahrirlash</button>
+      <button class="pay-btn" id="payLoadBtn">💰 Pul olindi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ JAMOA (ZBORSHIK / LABO) MODAL ============ -->
+<div id="teamModal" class="modal-overlay hidden">
+  <div class="modal team-modal">
+    <div class="modal-head">
+      <h2>👥 Jamoa — Zborshik va Labolar</h2>
+      <button class="icon-btn close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-label">🎨 Ranglar (kategoriya bo'yicha)</div>
+      <select id="teamColorCatSelect" style="margin-bottom:8px;"></select>
+      <div id="teamColorList" class="team-list"></div>
+      <button class="ghost-btn" id="teamAddColorBtn">➕ Yangi rang qo'shish</button>
+
+      <div class="section-label" style="margin-top:20px">🧰 Zborshiklar</div>
+      <div id="teamZborshikList" class="team-list"></div>
+      <button class="ghost-btn" id="teamAddZborshikBtn">➕ Yangi zborshik qo'shish</button>
+
+      <div class="section-label" style="margin-top:20px">🚚 Labolar</div>
+      <div id="teamLaboList" class="team-list"></div>
+      <button class="ghost-btn" id="teamAddLaboBtn">➕ Yangi labo qo'shish</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HISOBOT MODAL ============ -->
+<div id="reportModal" class="modal-overlay hidden">
+  <div class="modal report-modal">
+    <div class="modal-head">
+      <h2>📊 Hisobot</h2>
+      <button class="icon-btn close-modal">✕</button>
+    </div>
+    <div class="modal-body" id="reportBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="yuk-app.js"></script>
+</body>
+</html>

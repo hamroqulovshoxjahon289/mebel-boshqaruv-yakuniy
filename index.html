@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face ID - Ishchi Nazorat Tizimi</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Face-api.js kutubxonasi CDN orqali yuklanadi -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FACE ID CONTROL</h1>
+            <p class="subtitle">Kompaniya ishchilarining davomomat tizimi</p>
+        </header>
+
+        <main class="main-content">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" width="640" height="480" autoplay muted playsinline></video>
+                    <div id="loading-overlay" class="overlay">
+                        <div class="spinner"></div>
+                        <p>Tizim yuklanmoqda, kuting...</p>
+                    </div>
+                </div>
+                <div id="status-card" class="status-card waiting">
+                    <div class="status-icon">📷</div>
+                    <div class="status-text">
+                        <h2 id="status-title">Kameraga qarang</h2>
+                        <p id="status-desc">Yuzingizni skanerlash uchun markazda turing</p>
+                    </div>
+                </div>
+
+                <div class="excel-panel">
+                    <div class="excel-status connected">
+                        <span class="excel-icon">📊</span>
+                        <span>Har bir kelish/ketish avtomatik "davomat.xlsx" ga yoziladi</span>
+                    </div>
+                    <a href="/download-excel" class="excel-download-btn" download>⬇️ Excelni yuklab olish</a>
+                    <a href="/mebel.html" class="excel-download-btn" style="background:#7c3aed;">🏭 Ishlab chiqarish tizimi</a>
+                    <a href="/yuk.html" class="excel-download-btn" style="background:#0891b2;">🚛 Yuk Manifest</a>
+                </div>
+
+                <!-- Xodim keldi deb belgilangach, uning bo'limiga o'tish tugmasi shu yerda chiqadi -->
+                <div id="mebel-link" class="mebel-link hidden"></div>
+
+                <!-- Tushlik hisoboti: soat 10:00 bo'lishi bilan server avtomatik to'ldiradi -->
+                <div id="lunch-report" class="lunch-report hidden">
+                    <div class="lunch-icon">🍲</div>
+                    <div class="lunch-text">
+                        <h3 id="lunch-title">Tushlik hisoboti</h3>
+                        <p id="lunch-desc">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="logs-section">
+                <h2>Bugungi davomomat jurnali</h2>
+                <div class="table-wrapper">
+                    <table id="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Ishchi ismi</th>
+                                <th>Kelgan vaqti</th>
+                                <th>Ketgan vaqti</th>
+                                <th>Kech qolish</th>
+                                <th>Jarima</th>
+                                <th>Ishlagan vaqti</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-body">
+                            <!-- Loglar JS orqali qo'shiladi -->
+                            <tr class="empty-row">
+                                <td colspan="6">Hozircha hech kim ro'yxatdan o'tmadi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

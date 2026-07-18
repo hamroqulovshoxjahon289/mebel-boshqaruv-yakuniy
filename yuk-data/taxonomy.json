@@ -1,0 +1,47 @@
+[
+  {
+    "id": "16466645-4ba8-4781-92a6-5313dbd849fc",
+    "name": "Shkaf",
+    "colors": [
+      {
+        "id": "838eba76-1fb0-4d23-9613-3fc6469875fe",
+        "name": "lipa"
+      }
+    ]
+  },
+  {
+    "id": "444045b9-2f61-476d-acb3-48c5b120ddd3",
+    "name": "Penal",
+    "colors": []
+  },
+  {
+    "id": "246837c1-20f8-4d7c-a259-b092a9e9294f",
+    "name": "Adnaspalni",
+    "colors": []
+  },
+  {
+    "id": "fbde3f2c-7bf8-4792-a5fa-0618ea21d6ea",
+    "name": "Spalni garnitur",
+    "colors": []
+  },
+  {
+    "id": "15bba11b-8814-498f-b91a-9371f03662d7",
+    "name": "Termo",
+    "colors": []
+  },
+  {
+    "id": "5d51e863-cbf8-466c-a502-d7c958f44fea",
+    "name": "Dvuxspalni",
+    "colors": []
+  },
+  {
+    "id": "8beff8d5-1270-499a-bfb0-739fc74e8ea7",
+    "name": "Sandiq",
+    "colors": []
+  },
+  {
+    "id": "c4bb90d6-730a-4ade-bb9e-4a5eb939822f",
+    "name": "Divan",
+    "colors": []
+  }
+]

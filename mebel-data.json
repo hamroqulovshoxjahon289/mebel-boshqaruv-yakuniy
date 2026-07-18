@@ -1,0 +1,48 @@
+{
+  "material_fasad_mdf_baza": [
+    {
+      "id": 1784227242260,
+      "sana": "16/07/2026, 23:40:42",
+      "rang": "Lipa",
+      "olcham": "275x183",
+      "ismi": "Shoxi",
+      "soni": 38
+    }
+  ],
+  "taminot_labolar": [
+    {
+      "id": 1,
+      "plate": "30 Z 232 ZZ",
+      "driverName": "Dilshod",
+      "driverPhone": ""
+    },
+    {
+      "id": 2,
+      "plate": "",
+      "driverName": "",
+      "driverPhone": ""
+    },
+    {
+      "id": 3,
+      "plate": "",
+      "driverName": "",
+      "driverPhone": ""
+    },
+    {
+      "id": 4,
+      "plate": "",
+      "driverName": "",
+      "driverPhone": ""
+    }
+  ],
+  "material_korpus_yuklar": [
+    {
+      "id": 1784272079411,
+      "sana": "17/07/2026, 10:07:59",
+      "rang": "Patina laminat",
+      "olcham": "275x183",
+      "ismi": "Amir",
+      "soni": 30
+    }
+  ]
+}

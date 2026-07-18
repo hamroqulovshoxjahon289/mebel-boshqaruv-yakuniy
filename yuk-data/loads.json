@@ -1,0 +1,37 @@
+[
+  {
+    "id": "00374aa1-4ac8-4bc5-a8f5-2420fa46e5ea",
+    "sana": "2026-07-17",
+    "holat": "qizil",
+    "kategoriya": {
+      "id": "16466645-4ba8-4781-92a6-5313dbd849fc",
+      "nomi": "Shkaf"
+    },
+    "nomi": "Leyla",
+    "rang": {
+      "id": "838eba76-1fb0-4d23-9613-3fc6469875fe",
+      "nomi": "lipa"
+    },
+    "matras": {
+      "bor": false,
+      "turi": null
+    },
+    "izoh": "Zör shavad",
+    "manzil": {
+      "hudud": "Mulyon",
+      "dom": "",
+      "padyez": "",
+      "etaj": "1"
+    },
+    "astatka": 2000000,
+    "tel1": "933468632",
+    "tel2": "",
+    "zborshik": null,
+    "labo": null,
+    "pin": "1111",
+    "tolandi": true,
+    "tolanganSana": "2026-07-17",
+    "tolanganSumma": 2000000,
+    "createdAt": "2026-07-15T09:16:07.439Z"
+  }
+]

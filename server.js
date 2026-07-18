@@ -46,9 +46,9 @@ const FINE_REDUCTION_PER_2MIN = 1000;             // shu vaqtdan keyin har 2 daq
 
 // ---------- YUK MANIFEST (haftalik yetkazib berish) sozlamalari ----------
 // MUHIM: saytdan foydalanishdan oldin bu kodlarni albatta o'zingizga xos qiling!
-const YUK_ADD_CODE = '1111';      // yangi yuk QO'SHISH uchun so'raladigan kod
-const YUK_DELETE_CODE = '9999';   // yukni O'CHIRISH uchun so'raladigan kod
-const YUK_PAYMENT_CODE = '2222';  // "Pul olindi" deb belgilash uchun so'raladigan kod
+const YUK_ADD_CODE = '7410';      // yangi yuk QO'SHISH uchun so'raladigan kod
+const YUK_DELETE_CODE = '5927';   // yukni O'CHIRISH uchun so'raladigan kod
+const YUK_PAYMENT_CODE = '9147';  // "Pul olindi" deb belgilash uchun so'raladigan kod
 const YUK_MAX_PER_DAY = 30;       // bir kunga maksimal yuk soni
 
 // ---------- SMS sozlamalari (Eskiz.uz orqali oshpazga SMS yuborish uchun) ----------

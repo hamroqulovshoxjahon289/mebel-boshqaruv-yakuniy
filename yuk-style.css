@@ -634,3 +634,47 @@ form > .field-row:first-child { }
   .week-nav { order: 3; margin-left: 0; width: 100%; justify-content: center; }
   .field-row, .field-row.three { grid-template-columns: 1fr; }
 }
+
+/* ============ TEZKOR HOLAT TUGMALARI ============ */
+.quick-status-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.status-quick-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  color: #111;
+}
+.status-quick-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+.status-quick-btn.qizil { background: #fca5a5; }
+.status-quick-btn.sariq { background: #fde68a; }
+.status-quick-btn.yashil { background: #86efac; }
+
+/* ============ CHOP ETISH (PRINT) ============ */
+.print-only { display: none; }
+
+@media print {
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    color: #000;
+    background: #fff;
+  }
+  .print-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .print-table td { border: 1px solid #333; padding: 8px 10px; font-size: 14px; }
+  .print-table td:first-child { font-weight: bold; width: 35%; background: #f0f0f0; }
+}

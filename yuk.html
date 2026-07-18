@@ -95,9 +95,9 @@
         </label>
         <label class="narrow">Holat
           <select id="f_holat">
-            <option value="yashil">🟢 Yashil — tayyor</option>
-            <option value="sariq">🟡 Sariq — kutilmoqda</option>
-            <option value="qizil">🔴 Qizil — muammo</option>
+            <option value="qizil">🔴 Hali tayyor emas</option>
+            <option value="sariq">🟡 Yuklanmoqda</option>
+            <option value="yashil">🟢 Yuborildi</option>
           </select>
         </label>
       </div>
@@ -183,6 +183,15 @@
 
     <div class="quick-assign">
       <div class="quick-assign-row">
+        <label style="width:100%;">🚦 Holatni almashtirish (kodsiz)</label>
+      </div>
+      <div class="quick-status-buttons">
+        <button class="status-quick-btn qizil" data-holat="qizil">🔴 Hali tayyor emas</button>
+        <button class="status-quick-btn sariq" data-holat="sariq">🟡 Yuklanmoqda</button>
+        <button class="status-quick-btn yashil" data-holat="yashil">🟢 Yuborildi</button>
+      </div>
+
+      <div class="quick-assign-row">
         <label>🧰 Zborshikni almashtirish (kodsiz)
           <select id="quickZborshik"></select>
         </label>
@@ -198,11 +207,16 @@
 
     <div class="modal-actions">
       <button class="danger-btn" id="deleteLoadBtn">O'chirish</button>
+      <button class="ghost-btn" id="printLoadBtn">🖨️ Chop etish</button>
       <button class="ghost-btn" id="editLoadBtn">Tahrirlash</button>
       <button class="pay-btn" id="payLoadBtn">💰 Pul olindi</button>
     </div>
   </div>
 </div>
+
+<!-- ============ CHOP ETISH UCHUN ALOHIDA KO'RINISH ============ -->
+<!-- Bu blok odatda yashiringan, faqat Ctrl+P bosilganda ko'rinadi -->
+<div id="printArea" class="print-only"></div>
 
 <!-- ============ JAMOA (ZBORSHIK / LABO) MODAL ============ -->
 <div id="teamModal" class="modal-overlay hidden">

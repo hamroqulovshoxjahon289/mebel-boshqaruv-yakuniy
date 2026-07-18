@@ -914,7 +914,7 @@ app.post('/api/loads', (req, res) => {
     const newLoad = {
         id: crypto.randomUUID(),
         sana,
-        holat: ['yashil', 'qizil', 'sariq'].includes(holat) ? holat : 'yashil',
+        holat: ['yashil', 'qizil', 'sariq'].includes(holat) ? holat : 'qizil',
         kategoriya: { id: cat.id, nomi: cat.name },
         nomi: String(nomi).trim(),
         rang: { id: rang.id, nomi: rang.name },
@@ -1019,7 +1019,7 @@ app.put('/api/loads/:id/assign', (req, res) => {
     const idx = loads.findIndex((l) => l.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Topilmadi' });
 
-    const { zborshikId, laboId } = req.body;
+    const { zborshikId, laboId, holat } = req.body;
 
     if (zborshikId !== undefined) {
         if (!zborshikId) loads[idx].zborshik = null;
@@ -1034,6 +1034,9 @@ app.put('/api/loads/:id/assign', (req, res) => {
             const lv = yukReadLabolar().find((x) => x.id === laboId);
             loads[idx].labo = lv ? { id: lv.id, raqami: lv.raqami, haydovchi: lv.haydovchi, telefon: lv.telefon } : loads[idx].labo;
         }
+    }
+    if (holat !== undefined && ['yashil', 'qizil', 'sariq'].includes(holat)) {
+        loads[idx].holat = holat;
     }
     yukWriteLoads(loads);
     res.json(yukPublicLoad(loads[idx]));

@@ -1,5 +1,5 @@
 const DAY_NAMES_BY_DOW = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
-const HOLAT_LABEL = { yashil: 'Yashil — tayyor', sariq: 'Sariq — kutilmoqda', qizil: 'Qizil — muammo' };
+const HOLAT_LABEL = { qizil: 'Hali tayyor emas', sariq: 'Yuklanmoqda', yashil: 'Yuborildi' };
 const MAX_PER_DAY = 30;
 const NEW_OPTION = '__new__';
 const VISIBLE_DAYS = 3;   // asosiy ekranda ko'rinadigan kunlar soni
@@ -369,7 +369,7 @@ function openEditModal(l) {
 
   document.getElementById('f_izoh').value = l.izoh || '';
   document.getElementById('f_sana').value = l.sana || '';
-  document.getElementById('f_holat').value = l.holat || 'yashil';
+  document.getElementById('f_holat').value = l.holat || 'qizil';
   document.getElementById('f_hudud').value = l.manzil?.hudud || '';
   document.getElementById('f_dom').value = l.manzil?.dom || '';
   document.getElementById('f_padyez').value = l.manzil?.padyez || '';
@@ -550,6 +550,55 @@ document.getElementById('quickLaboSave').onclick = async () => {
   } catch (err) {
     showToast(err.message, true);
   }
+};
+
+// Holatni PIN'siz, bitta tugma bosish bilan almashtirish
+document.querySelectorAll('.status-quick-btn').forEach((btn) => {
+  btn.onclick = async () => {
+    if (!viewingLoad) return;
+    try {
+      const updated = await assignLoad(viewingLoad.id, { holat: btn.dataset.holat });
+      viewingLoad = updated;
+      showToast(`Holat "${HOLAT_LABEL[btn.dataset.holat]}" ga almashtirildi ✓`);
+      await refresh();
+      openViewModal(updated);
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+});
+
+// Bitta buyurtmani chop etish (Ctrl+P) — faqat shu buyurtmaning o'zi chiqadi
+document.getElementById('printLoadBtn').onclick = () => {
+  if (!viewingLoad) return;
+  const l = viewingLoad;
+  const addrLine = [l.manzil?.hudud].filter(Boolean).join(', ') || '—';
+  const domLine = [
+    l.manzil?.dom ? `dom ${l.manzil.dom}` : '',
+    l.manzil?.padyez ? `${l.manzil.padyez}-padyez` : '',
+    l.manzil?.etaj ? `${l.manzil.etaj}-etaj` : '',
+  ].filter(Boolean).join(' · ') || '—';
+  const title = [l.nomi, l.rang?.nomi].filter(Boolean).join(' — ');
+
+  document.getElementById('printArea').innerHTML = `
+    <h1>${escapeHtml(title || 'Yuk')}</h1>
+    <table class="print-table">
+      <tr><td>Holat</td><td>${HOLAT_LABEL[l.holat] || l.holat}</td></tr>
+      <tr><td>Kategoriya</td><td>${escapeHtml(l.kategoriya?.nomi || '—')}</td></tr>
+      <tr><td>Rang</td><td>${escapeHtml(l.rang?.nomi || '—')}</td></tr>
+      ${l.matras?.bor ? `<tr><td>Matras</td><td>${escapeHtml(l.matras.turi)}</td></tr>` : ''}
+      ${l.izoh ? `<tr><td>Izoh</td><td>${escapeHtml(l.izoh)}</td></tr>` : ''}
+      <tr><td>Jo'natish sanasi</td><td>${l.sana}</td></tr>
+      <tr><td>Hudud</td><td>${escapeHtml(addrLine)}</td></tr>
+      <tr><td>Dom / padyez / etaj</td><td>${escapeHtml(domLine)}</td></tr>
+      <tr><td>Astatka (qoldiq)</td><td>${fmtMoney(l.astatka)} so'm</td></tr>
+      <tr><td>1-telefon</td><td>${escapeHtml(l.tel1 || '—')}</td></tr>
+      <tr><td>2-telefon</td><td>${escapeHtml(l.tel2 || '—')}</td></tr>
+      ${l.zborshik ? `<tr><td>Zborshik</td><td>${escapeHtml(l.zborshik.ism)} — ${escapeHtml(l.zborshik.telefon || '')}</td></tr>` : ''}
+      ${l.labo ? `<tr><td>Labo</td><td>${escapeHtml(l.labo.raqami)} (${escapeHtml(l.labo.haydovchi)}) — ${escapeHtml(l.labo.telefon || '')}</td></tr>` : ''}
+    </table>
+  `;
+  window.print();
 };
 
 document.getElementById('editLoadBtn').onclick = () => { if (viewingLoad) openEditModal(viewingLoad); };

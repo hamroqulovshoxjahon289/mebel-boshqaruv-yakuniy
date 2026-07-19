@@ -46,10 +46,13 @@ const FINE_REDUCTION_PER_2MIN = 1000;             // shu vaqtdan keyin har 2 daq
 
 // ---------- YUK MANIFEST (haftalik yetkazib berish) sozlamalari ----------
 // MUHIM: saytdan foydalanishdan oldin bu kodlarni albatta o'zingizga xos qiling!
-const YUK_ADD_CODE = '7410';      // yangi yuk QO'SHISH uchun so'raladigan kod
-const YUK_DELETE_CODE = '5927';   // yukni O'CHIRISH uchun so'raladigan kod
-const YUK_PAYMENT_CODE = '9147';  // "Pul olindi" deb belgilash uchun so'raladigan kod
+const YUK_ADD_CODE = '1111';      // yangi yuk QO'SHISH uchun so'raladigan kod
+const YUK_DELETE_CODE = '9999';   // yukni O'CHIRISH uchun so'raladigan kod
+const YUK_PAYMENT_CODE = '2222';  // "Pul olindi" deb belgilash uchun so'raladigan kod
 const YUK_MAX_PER_DAY = 30;       // bir kunga maksimal yuk soni
+
+// Buyurtma holati ranglarining Excel/hisobotlarda ko'rinadigan matni (yuk-app.js dagi bilan bir xil)
+const HOLAT_EXCEL_LABEL = { qizil: 'Hali tayyor emas', sariq: 'Yuklanmoqda', yashil: 'Yuborildi' };
 
 // ---------- SMS sozlamalari (Eskiz.uz orqali oshpazga SMS yuborish uchun) ----------
 // Bularni qo'lda shu yerga yozmang! "Environment Variables" (o'zgaruvchilar) orqali beriladi
@@ -713,6 +716,7 @@ const YUK_DATA_FILE = path.join(YUK_DATA_DIR, 'loads.json');
 const YUK_TAXONOMY_FILE = path.join(YUK_DATA_DIR, 'taxonomy.json');
 const YUK_ZBORSHIK_FILE = path.join(YUK_DATA_DIR, 'zborshiklar.json');
 const YUK_LABO_FILE = path.join(YUK_DATA_DIR, 'labolar.json');
+const YUK_FILIAL_FILE = path.join(YUK_DATA_DIR, 'filiallar.json');
 const YUK_EXCEL_FILE = path.join(DATA_DIR, 'yuk-manifest.xlsx');
 
 const YUK_DEFAULT_CATEGORIES = ['Shkaf', 'Penal', 'Adnaspalni', 'Spalni garnitur', 'Termo', 'Dvuxspalni', 'Sandiq', 'Divan'];
@@ -737,48 +741,117 @@ function yukWriteLoads(loads) {
     yukWriteJson(YUK_DATA_FILE, loads);
     yukWriteExcelSnapshot(loads);
 }
+function yukTotalPaid(l) {
+    return (l.tolovlar || []).reduce((sum, t) => sum + (Number(t.summa) || 0), 0);
+}
+
 function yukPublicLoad(l) {
     const { pin, ...rest } = l;
-    return rest;
+    const jamiTolangan = yukTotalPaid(l);
+    return {
+        ...rest,
+        jamiTolangan,
+        qoldiq: Math.max(0, (Number(l.astatka) || 0) - jamiTolangan),
+    };
 }
 
 function yukWriteExcelSnapshot(loads) {
     try {
-        const rows = loads.map((l) => ({
-            'Sana': l.sana,
-            'Holat': l.holat,
-            'Kategoriya': l.kategoriya?.nomi || '',
-            'Nomi': l.nomi || '',
-            'Rang': l.rang?.nomi || '',
-            'Matras': l.matras?.bor ? (l.matras.turi || 'Bor') : '',
-            'Izoh': l.izoh || '',
-            'Hudud': l.manzil?.hudud || '',
-            'Dom': l.manzil?.dom || '',
-            'Padyez': l.manzil?.padyez || '',
-            'Etaj': l.manzil?.etaj || '',
-            'Astatka': l.astatka || 0,
-            'Telefon 1': l.tel1 || '',
-            'Telefon 2': l.tel2 || '',
-            "Zborshik": l.zborshik?.ism || '',
-            'Zborshik tel': l.zborshik?.telefon || '',
-            'Labo raqami': l.labo?.raqami || '',
-            'Haydovchi': l.labo?.haydovchi || '',
-            'Haydovchi tel': l.labo?.telefon || '',
-            "To'landimi": l.tolandi ? 'Ha' : "Yo'q",
-            "To'langan sana": l.tolanganSana || '',
-            "To'langan summa": l.tolanganSumma || '',
-            'Yaratilgan': l.createdAt || '',
-        }));
+        const wb = XLSX.utils.book_new();
+
+        // ---------- 1-VARAQ: Zakazlar (asosiy ro'yxat) ----------
+        const rows = loads.map((l) => {
+            const jamiTolangan = yukTotalPaid(l);
+            const qoldiq = Math.max(0, (Number(l.astatka) || 0) - jamiTolangan);
+            return {
+                'Sana': l.sana,
+                'Holat': HOLAT_EXCEL_LABEL[l.holat] || l.holat,
+                'Filial': l.filial?.nomi || '',
+                'Kategoriya': l.kategoriya?.nomi || '',
+                'Nomi': l.nomi || '',
+                'Rang': l.rang?.nomi || '',
+                'Matras': l.matras?.bor ? (l.matras.turi || 'Bor') : '',
+                'Izoh': l.izoh || '',
+                'Hudud': l.manzil?.hudud || '',
+                'Dom': l.manzil?.dom || '',
+                'Padyez': l.manzil?.padyez || '',
+                'Etaj': l.manzil?.etaj || '',
+                'Astatka': l.astatka || 0,
+                'Telefon 1': l.tel1 || '',
+                'Telefon 2': l.tel2 || '',
+                "Zborshik": l.zborshik?.ism || '',
+                'Zborshik tel': l.zborshik?.telefon || '',
+                'Labo raqami': l.labo?.raqami || '',
+                'Haydovchi': l.labo?.haydovchi || '',
+                'Haydovchi tel': l.labo?.telefon || '',
+                "Jami to'langan": jamiTolangan,
+                "Qoldiq": qoldiq,
+                "To'landimi": l.tolandi ? "To'liq to'landi" : (jamiTolangan > 0 ? 'Qisman to\'landi' : "Yo'q"),
+                'Yaratilgan': l.createdAt || '',
+            };
+        });
         const sheet = XLSX.utils.json_to_sheet(rows);
         sheet['!cols'] = [
-            { wch: 11 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 14 },
+            { wch: 11 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 14 },
             { wch: 26 }, { wch: 20 }, { wch: 8 }, { wch: 9 }, { wch: 7 }, { wch: 13 },
             { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 13 }, { wch: 16 },
-            { wch: 16 }, { wch: 9 }, { wch: 13 }, { wch: 15 }, { wch: 19 },
+            { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 15 }, { wch: 19 },
         ];
         if (sheet['!ref']) sheet['!autofilter'] = { ref: sheet['!ref'] };
-        const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, sheet, 'Zakazlar');
+
+        // ---------- 2-VARAQ: Zborshiklar hisoboti ----------
+        const zbRows = loads.filter((l) => l.zborshik).map((l) => ({
+            'Sana': l.sana,
+            'Zborshik': l.zborshik.ism,
+            'Telefon': l.zborshik.telefon || '',
+            'Buyurtma': l.nomi || '',
+            'Filial': l.filial?.nomi || '',
+            'Hudud': l.manzil?.hudud || '',
+            'Holat': HOLAT_EXCEL_LABEL[l.holat] || l.holat,
+        }));
+        const zbSheet = XLSX.utils.json_to_sheet(zbRows);
+        zbSheet['!cols'] = [{ wch: 11 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 16 }];
+        if (zbSheet['!ref']) zbSheet['!autofilter'] = { ref: zbSheet['!ref'] };
+        XLSX.utils.book_append_sheet(wb, zbSheet, 'Zborshiklar hisoboti');
+
+        // ---------- 3-VARAQ: Labolar hisoboti ----------
+        const lbRows = loads.filter((l) => l.labo).map((l) => ({
+            'Sana': l.sana,
+            'Labo raqami': l.labo.raqami,
+            'Haydovchi': l.labo.haydovchi,
+            'Telefon': l.labo.telefon || '',
+            'Buyurtma': l.nomi || '',
+            'Filial': l.filial?.nomi || '',
+            'Hudud': l.manzil?.hudud || '',
+            'Holat': HOLAT_EXCEL_LABEL[l.holat] || l.holat,
+        }));
+        const lbSheet = XLSX.utils.json_to_sheet(lbRows);
+        lbSheet['!cols'] = [{ wch: 11 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 16 }];
+        if (lbSheet['!ref']) lbSheet['!autofilter'] = { ref: lbSheet['!ref'] };
+        XLSX.utils.book_append_sheet(wb, lbSheet, 'Labolar hisoboti');
+
+        // ---------- 4-VARAQ: Kassa (barcha to'lovlar) ----------
+        const kassaRows = [];
+        loads.forEach((l) => {
+            (l.tolovlar || []).forEach((t) => {
+                kassaRows.push({
+                    "To'lov sanasi": t.sana,
+                    'Buyurtma': l.nomi || '',
+                    'Filial': l.filial?.nomi || '',
+                    'Hudud': l.manzil?.hudud || '',
+                    'Summa': Number(t.summa) || 0,
+                });
+            });
+        });
+        kassaRows.sort((a, b) => String(a["To'lov sanasi"]).localeCompare(String(b["To'lov sanasi"])));
+        const jamiKassa = kassaRows.reduce((s, r) => s + r.Summa, 0);
+        kassaRows.push({ "To'lov sanasi": '', 'Buyurtma': '', 'Filial': '', 'Hudud': 'JAMI:', 'Summa': jamiKassa });
+        const kassaSheet = XLSX.utils.json_to_sheet(kassaRows);
+        kassaSheet['!cols'] = [{ wch: 13 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 14 }];
+        if (kassaSheet['!ref']) kassaSheet['!autofilter'] = { ref: kassaSheet['!ref'] };
+        XLSX.utils.book_append_sheet(wb, kassaSheet, 'Kassa');
+
         fs.mkdirSync(DATA_DIR, { recursive: true });
         XLSX.writeFile(wb, YUK_EXCEL_FILE);
     } catch (err) {
@@ -865,6 +938,24 @@ app.post('/api/labolar', (req, res) => {
     res.json(l);
 });
 
+function yukReadFiliallar() { return yukReadJson(YUK_FILIAL_FILE, []); }
+function yukWriteFiliallar(list) { yukWriteJson(YUK_FILIAL_FILE, list); }
+
+app.get('/api/filiallar', (req, res) => res.json(yukReadFiliallar()));
+
+app.post('/api/filiallar', (req, res) => {
+    const nomi = String(req.body.nomi || '').trim();
+    if (!nomi) return res.status(400).json({ error: 'Filial nomini kiriting' });
+    const list = yukReadFiliallar();
+    if (list.some((f) => f.nomi.toLowerCase() === nomi.toLowerCase())) {
+        return res.status(400).json({ error: 'Bu filial allaqachon mavjud' });
+    }
+    const f = { id: crypto.randomUUID(), nomi };
+    list.push(f);
+    yukWriteFiliallar(list);
+    res.json(f);
+});
+
 app.get('/api/loads', (req, res) => {
     const loads = yukReadLoads();
     res.json(loads.map(yukPublicLoad));
@@ -880,7 +971,7 @@ function yukResolveMatras(kategoriyaNomi, matrasInput) {
 app.post('/api/loads', (req, res) => {
     const {
         adminCode, pin, sana, holat, kategoriyaId, nomi, rangId, matras,
-        izoh, manzil, astatka, tel1, tel2, zborshikId, laboId,
+        izoh, manzil, astatka, tel1, tel2, zborshikId, laboId, filialId,
     } = req.body;
 
     if (adminCode !== YUK_ADD_CODE) return res.status(403).json({ error: "Kod noto'g'ri" });
@@ -910,6 +1001,11 @@ app.post('/api/loads', (req, res) => {
         const lv = yukReadLabolar().find((x) => x.id === laboId);
         if (lv) labo = { id: lv.id, raqami: lv.raqami, haydovchi: lv.haydovchi, telefon: lv.telefon };
     }
+    let filial = null;
+    if (filialId) {
+        const f = yukReadFiliallar().find((x) => x.id === filialId);
+        if (f) filial = { id: f.id, nomi: f.nomi };
+    }
 
     const newLoad = {
         id: crypto.randomUUID(),
@@ -931,10 +1027,10 @@ app.post('/api/loads', (req, res) => {
         tel2: tel2 || '',
         zborshik,
         labo,
+        filial,
         pin: String(pin).trim(),
+        tolovlar: [],       // har bir to'lov: { sana, summa }
         tolandi: false,
-        tolanganSana: null,
-        tolanganSumma: null,
         createdAt: new Date().toISOString(),
     };
     loads.push(newLoad);
@@ -954,7 +1050,7 @@ app.put('/api/loads/:id', (req, res) => {
 
     const {
         sana, holat, kategoriyaId, nomi, rangId, matras, izoh, manzil, astatka,
-        tel1, tel2, zborshikId, laboId,
+        tel1, tel2, zborshikId, laboId, filialId,
     } = req.body;
 
     if (sana && sana !== loads[idx].sana) {
@@ -992,6 +1088,14 @@ app.put('/api/loads/:id', (req, res) => {
             if (lv) labo = { id: lv.id, raqami: lv.raqami, haydovchi: lv.haydovchi, telefon: lv.telefon };
         }
     }
+    let filial = loads[idx].filial;
+    if (filialId !== undefined) {
+        if (!filialId) filial = null;
+        else {
+            const f = yukReadFiliallar().find((x) => x.id === filialId);
+            if (f) filial = { id: f.id, nomi: f.nomi };
+        }
+    }
 
     loads[idx] = {
         ...loads[idx],
@@ -1008,6 +1112,7 @@ app.put('/api/loads/:id', (req, res) => {
         tel2: tel2 ?? loads[idx].tel2,
         zborshik,
         labo,
+        filial,
     };
     yukWriteLoads(loads);
     res.json(yukPublicLoad(loads[idx]));
@@ -1019,7 +1124,7 @@ app.put('/api/loads/:id/assign', (req, res) => {
     const idx = loads.findIndex((l) => l.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Topilmadi' });
 
-    const { zborshikId, laboId, holat } = req.body;
+    const { zborshikId, laboId, holat, filialId } = req.body;
 
     if (zborshikId !== undefined) {
         if (!zborshikId) loads[idx].zborshik = null;
@@ -1035,6 +1140,13 @@ app.put('/api/loads/:id/assign', (req, res) => {
             loads[idx].labo = lv ? { id: lv.id, raqami: lv.raqami, haydovchi: lv.haydovchi, telefon: lv.telefon } : loads[idx].labo;
         }
     }
+    if (filialId !== undefined) {
+        if (!filialId) loads[idx].filial = null;
+        else {
+            const f = yukReadFiliallar().find((x) => x.id === filialId);
+            loads[idx].filial = f ? { id: f.id, nomi: f.nomi } : loads[idx].filial;
+        }
+    }
     if (holat !== undefined && ['yashil', 'qizil', 'sariq'].includes(holat)) {
         loads[idx].holat = holat;
     }
@@ -1043,16 +1155,24 @@ app.put('/api/loads/:id/assign', (req, res) => {
 });
 
 app.put('/api/loads/:id/pay', (req, res) => {
-    const { paymentCode } = req.body;
+    const { paymentCode, summa } = req.body;
     if (paymentCode !== YUK_PAYMENT_CODE) return res.status(403).json({ error: "Kod noto'g'ri" });
+    const paymentAmount = Number(summa);
+    if (!paymentAmount || paymentAmount <= 0) return res.status(400).json({ error: "To'lov miqdorini kiriting" });
+
     const loads = yukReadLoads();
     const idx = loads.findIndex((l) => l.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Topilmadi' });
-    if (loads[idx].tolandi) return res.status(400).json({ error: 'Bu yuk uchun pul allaqachon olingan' });
+    if (loads[idx].tolandi) return res.status(400).json({ error: 'Bu yuk uchun pul allaqachon to\'liq olingan' });
 
-    loads[idx].tolandi = true;
-    loads[idx].tolanganSana = localDateStr();
-    loads[idx].tolanganSumma = Number(loads[idx].astatka) || 0;
+    if (!loads[idx].tolovlar) loads[idx].tolovlar = [];
+    loads[idx].tolovlar.push({ sana: localDateStr(), summa: paymentAmount });
+
+    const jamiTolangan = yukTotalPaid(loads[idx]);
+    if (jamiTolangan >= (Number(loads[idx].astatka) || 0)) {
+        loads[idx].tolandi = true; // hammasi to'landi — eski holatga (yakunlangan) o'tadi
+    }
+
     yukWriteLoads(loads);
     res.json(yukPublicLoad(loads[idx]));
 });
@@ -1063,9 +1183,9 @@ app.put('/api/loads/:id/unpay', (req, res) => {
     const loads = yukReadLoads();
     const idx = loads.findIndex((l) => l.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Topilmadi' });
+    // Barcha to'lovlarni bekor qiladi (butunlay boshidan boshlash uchun)
+    loads[idx].tolovlar = [];
     loads[idx].tolandi = false;
-    loads[idx].tolanganSana = null;
-    loads[idx].tolanganSumma = null;
     yukWriteLoads(loads);
     res.json(yukPublicLoad(loads[idx]));
 });

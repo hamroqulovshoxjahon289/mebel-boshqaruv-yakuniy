@@ -10,6 +10,7 @@ let loads = [];
 let taxonomy = { categories: [], matrasCategories: [], matrasTypes: [] };
 let zborshiklar = [];
 let labolar = [];
+let filiallar = [];
 let currentStart = startOfDay(new Date());
 let editingId = null;
 let viewingLoad = null;
@@ -87,6 +88,13 @@ async function addLabo(raqami, haydovchi, telefon) {
   if (!res.ok) throw new Error(data.error || 'Xatolik');
   return data;
 }
+async function fetchFiliallar() { filiallar = await (await fetch('/api/filiallar')).json(); }
+async function addFilial(nomi) {
+  const res = await fetch('/api/filiallar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nomi }) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Xatolik');
+  return data;
+}
 
 // ---------------- Formadagi selectlar ----------------
 const catSelect = document.getElementById('f_kategoriya');
@@ -98,6 +106,7 @@ const matrasTuriWrap = document.getElementById('matrasTuriWrap');
 const matrasTuriSelect = document.getElementById('f_matras_turi');
 const zborshikSelect = document.getElementById('f_zborshik');
 const laboSelect = document.getElementById('f_labo');
+const filialSelect = document.getElementById('f_filial');
 
 function fillSelect(select, items, placeholder, addLabel, valueFn, labelFn) {
   select.innerHTML = '';
@@ -141,6 +150,10 @@ function populateZborshiklar(select, selectedId) {
 }
 function populateLabolar(select, selectedId) {
   fillSelect(select, labolar, '— tanlanmagan —', "➕ Yangi labo qo'shish", null, (l) => `${l.raqami} — ${l.haydovchi}`);
+  select.value = selectedId || '';
+}
+function populateFiliallar(select, selectedId) {
+  fillSelect(select, filiallar, '— tanlanmagan —', "➕ Yangi filial qo'shish", null, (f) => f.nomi);
   select.value = selectedId || '';
 }
 
@@ -210,6 +223,21 @@ laboSelect.addEventListener('change', async () => {
     } catch (err) {
       showToast(err.message, true);
       laboSelect.value = '';
+    }
+  }
+});
+
+filialSelect.addEventListener('change', async () => {
+  if (filialSelect.value === NEW_OPTION) {
+    const nomi = prompt('Yangi filial nomi:');
+    if (!nomi || !nomi.trim()) { filialSelect.value = ''; return; }
+    try {
+      const f = await addFilial(nomi.trim());
+      await fetchFiliallar();
+      populateFiliallar(filialSelect, f.id);
+    } catch (err) {
+      showToast(err.message, true);
+      filialSelect.value = '';
     }
   }
 });
@@ -319,7 +347,7 @@ function renderCard(l) {
       ${l.tel1 ? `<div class="dot-leader"><span class="lbl">Tel</span><span class="fill"></span><span class="val">${escapeHtml(l.tel1)}</span></div>` : ''}
     </div>
     ${meta.length ? `<div class="load-meta">${meta.map(escapeHtml).join(' · ')}</div>` : ''}
-    ${l.tolandi ? `<div class="paid-badge">💰 To'landi</div>` : ''}
+    ${l.tolandi ? `<div class="paid-badge">💰 To'landi</div>` : ((l.jamiTolangan || 0) > 0 ? `<div class="paid-badge partial">💵 Qisman (${fmtMoney(l.jamiTolangan)})</div>` : '')}
   `;
   card.onclick = () => openViewModal(l);
   return card;
@@ -338,7 +366,7 @@ function openAddModal(prefilledDate) {
   populateColors('');
   populateZborshiklar(zborshikSelect, '');
   populateLabolar(laboSelect, '');
-  matrasRow.style.display = 'none';
+  populateFiliallar(filialSelect, '');
   matrasBorCheck.checked = false;
   matrasTuriWrap.style.display = 'none';
   document.getElementById('f_sana').value = prefilledDate || toISO(new Date());
@@ -356,6 +384,7 @@ function openEditModal(l) {
   populateColors(l.rang?.id || '');
   populateZborshiklar(zborshikSelect, l.zborshik?.id || '');
   populateLabolar(laboSelect, l.labo?.id || '');
+  populateFiliallar(filialSelect, l.filial?.id || '');
 
   toggleMatrasRow();
   if (l.matras?.bor) {
@@ -427,6 +456,7 @@ loadForm.addEventListener('submit', async (e) => {
     matras: { bor: matrasBorCheck.checked, turi: matrasBorCheck.checked ? matrasTuriSelect.value : null },
     zborshikId: zborshikSelect.value || null,
     laboId: laboSelect.value || null,
+    filialId: filialSelect.value || null,
     izoh: document.getElementById('f_izoh').value.trim(),
     sana: document.getElementById('f_sana').value,
     holat: document.getElementById('f_holat').value,
@@ -470,9 +500,20 @@ function openViewModal(l) {
     l.manzil?.etaj ? `${l.manzil.etaj}-etaj` : '',
   ].filter(Boolean).join(' · ') || '—';
 
+  const jamiTolangan = l.jamiTolangan || 0;
+  const qoldiq = l.qoldiq !== undefined ? l.qoldiq : Math.max(0, (Number(l.astatka) || 0) - jamiTolangan);
+  const tolovTarixi = (l.tolovlar || []).map(t => `${t.sana}: ${fmtMoney(t.summa)} so'm`).join('<br>') || 'Hali to\'lov yo\'q';
+  const tolovHolatDot = l.tolandi ? 'tolandi' : (jamiTolangan > 0 ? 'qisman' : 'kutilmoqda');
+  const tolovHolatText = l.tolandi ? "To'liq to'landi" : (jamiTolangan > 0 ? `Qisman to'landi (${fmtMoney(jamiTolangan)} so'm)` : 'Hali to\'lanmagan');
+
   document.getElementById('viewBody').innerHTML = `
     <div class="view-row"><span class="k">Holat</span><span class="v"><span class="status-pill"><span class="dot ${l.holat}"></span>${HOLAT_LABEL[l.holat] || l.holat}</span></span></div>
-    <div class="view-row"><span class="k">To'lov</span><span class="v">${l.tolandi ? `<span class="status-pill"><span class="dot tolandi"></span>To'landi (${l.tolanganSana}) — ${fmtMoney(l.tolanganSumma)} so'm</span>` : `<span class="status-pill"><span class="dot kutilmoqda"></span>Kutilmoqda</span>`}</span></div>
+    <div class="view-row"><span class="k">Filial</span><span class="v">${escapeHtml(l.filial?.nomi || '—')}</span></div>
+    <div class="view-row"><span class="k">To'lov holati</span><span class="v"><span class="status-pill"><span class="dot ${tolovHolatDot}"></span>${tolovHolatText}</span></span></div>
+    <div class="view-row"><span class="k">Astatka (umumiy narx)</span><span class="v mono">${fmtMoney(l.astatka)} so'm</span></div>
+    <div class="view-row"><span class="k">Jami to'langan</span><span class="v mono">${fmtMoney(jamiTolangan)} so'm</span></div>
+    <div class="view-row"><span class="k">Qoldiq</span><span class="v mono" style="color:${qoldiq > 0 ? '#f87171' : '#4ade80'};">${fmtMoney(qoldiq)} so'm</span></div>
+    <div class="view-row"><span class="k">To'lovlar tarixi</span><span class="v">${tolovTarixi}</span></div>
     <div class="view-row"><span class="k">Kategoriya</span><span class="v">${escapeHtml(l.kategoriya?.nomi || '—')}</span></div>
     <div class="view-row"><span class="k">Nomi</span><span class="v">${escapeHtml(l.nomi || '—')}</span></div>
     <div class="view-row"><span class="k">Rang</span><span class="v">${escapeHtml(l.rang?.nomi || '—')}</span></div>
@@ -481,7 +522,6 @@ function openViewModal(l) {
     <div class="view-row"><span class="k">Jo'natish sanasi</span><span class="v">${l.sana}</span></div>
     <div class="view-row"><span class="k">Hudud</span><span class="v">${escapeHtml(addrLine)}</span></div>
     <div class="view-row"><span class="k">Dom / padyez / etaj</span><span class="v">${escapeHtml(domLine)}</span></div>
-    <div class="view-row"><span class="k">Astatka (qoldiq)</span><span class="v mono">${fmtMoney(l.astatka)} so'm</span></div>
     <div class="view-row"><span class="k">1-telefon</span><span class="v mono">${escapeHtml(l.tel1 || '—')}</span></div>
     <div class="view-row"><span class="k">2-telefon</span><span class="v mono">${escapeHtml(l.tel2 || '—')}</span></div>
   `;
@@ -490,6 +530,9 @@ function openViewModal(l) {
   populateLabolar(quickLaboSelect, l.labo?.id || '');
 
   document.getElementById('payLoadBtn').style.display = l.tolandi ? 'none' : '';
+  document.getElementById('payLoadBtn').textContent = qoldiq > 0 && jamiTolangan > 0
+    ? `💰 Yana pul qabul qilish (qoldi ${fmtMoney(qoldiq)} so'm)`
+    : `💰 Pul qabul qilish`;
   formModal.classList.add('hidden');
   viewModal.classList.remove('hidden');
 }
@@ -619,17 +662,29 @@ document.getElementById('deleteLoadBtn').onclick = async () => {
 
 document.getElementById('payLoadBtn').onclick = async () => {
   if (!viewingLoad) return;
-  const code = prompt("To'lov qabul qilindi — tasdiqlash kodini kiriting:");
+  const qoldiq = viewingLoad.qoldiq !== undefined ? viewingLoad.qoldiq : viewingLoad.astatka;
+  const summaStr = prompt(`Necha so'm qabul qilindi? (Qoldiq: ${fmtMoney(qoldiq)} so'm)`);
+  if (summaStr === null) return;
+  const summa = Number(String(summaStr).replace(/\s/g, ''));
+  if (!summa || summa <= 0) { showToast("To'g'ri summa kiriting", true); return; }
+
+  const code = prompt("Tasdiqlash kodini kiriting:");
   if (code === null) return;
   try {
     const res = await fetch(`/api/loads/${viewingLoad.id}/pay`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentCode: code.trim() }),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentCode: code.trim(), summa }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Xatolik');
-    showToast(`💰 Pul olindi: ${fmtMoney(data.tolanganSumma)} so'm`);
-    closeModals();
+    if (data.tolandi) {
+      showToast(`✅ To'liq to'landi! Jami: ${fmtMoney(data.jamiTolangan)} so'm`);
+    } else {
+      showToast(`💰 ${fmtMoney(summa)} so'm qabul qilindi. Qoldiq: ${fmtMoney(data.qoldiq)} so'm`);
+    }
+    viewingLoad = data;
     await refresh();
+    openViewModal(data);
   } catch (err) {
     showToast(err.message, true);
   }
@@ -654,6 +709,11 @@ function renderTeamModal() {
   lbList.innerHTML = labolar.length
     ? labolar.map((l) => `<div class="team-item"><b>${escapeHtml(l.raqami)}</b> — ${escapeHtml(l.haydovchi)}${l.telefon ? ` <span class="muted">${escapeHtml(l.telefon)}</span>` : ''}</div>`).join('')
     : `<div class="empty-day">Hali labo qo'shilmagan</div>`;
+
+  const filList = document.getElementById('teamFilialList');
+  filList.innerHTML = filiallar.length
+    ? filiallar.map((f) => `<div class="team-item"><b>${escapeHtml(f.nomi)}</b></div>`).join('')
+    : `<div class="empty-day">Hali filial qo'shilmagan</div>`;
 
   teamModal.classList.remove('hidden');
 }
@@ -715,6 +775,19 @@ document.getElementById('teamAddLaboBtn').onclick = async () => {
   }
 };
 
+document.getElementById('teamAddFilialBtn').onclick = async () => {
+  const nomi = prompt('Yangi filial nomi:');
+  if (!nomi || !nomi.trim()) return;
+  try {
+    await addFilial(nomi.trim());
+    await fetchFiliallar();
+    renderTeamModal();
+    showToast("Filial qo'shildi ✓");
+  } catch (err) {
+    showToast(err.message, true);
+  }
+};
+
 // ---------------- Toast ----------------
 let toastTimer = null;
 function showToast(msg, isError) {
@@ -733,13 +806,32 @@ function reportRangeDates() {
   return arr;
 }
 
+// Oxirgi 30 kun (bugungi kun bilan birga) — oylik hisobotlar uchun
+function monthlyRangeDates() {
+  const arr = [];
+  const start = new Date();
+  start.setDate(start.getDate() - 29);
+  for (let i = 0; i < 30; i++) arr.push(toISO(addDays(start, i)));
+  return arr;
+}
+
 function computeMoneyReport() {
   const rangeDates = reportRangeDates();
+
+  // Kassa endi TO'LOV SANASI bo'yicha hisoblanadi (buyurtma sanasi emas) —
+  // chunki bitta buyurtmaga bir necha marta, turli kunlarda qisman to'lov kirishi mumkin.
+  const kassaByDate = {};
+  loads.forEach((l) => {
+    (l.tolovlar || []).forEach((t) => {
+      kassaByDate[t.sana] = (kassaByDate[t.sana] || 0) + (Number(t.summa) || 0);
+    });
+  });
+
   const days = rangeDates.map((iso) => {
     const date = new Date(iso);
     const ordersForDay = loads.filter((l) => l.sana === iso);
-    const astatkaKutilmoqda = ordersForDay.filter((l) => !l.tolandi).reduce((s, l) => s + Number(l.astatka || 0), 0);
-    const kassa = loads.filter((l) => l.tolandi && l.tolanganSana === iso).reduce((s, l) => s + Number(l.tolanganSumma || 0), 0);
+    const astatkaKutilmoqda = ordersForDay.filter((l) => !l.tolandi).reduce((s, l) => s + Number(l.qoldiq ?? l.astatka ?? 0), 0);
+    const kassa = kassaByDate[iso] || 0;
     return { iso, dayName: DAY_NAMES_BY_DOW[date.getDay()], soni: ordersForDay.length, astatkaKutilmoqda, kassa };
   });
   const umumiy = days.reduce((acc, d) => ({
@@ -751,8 +843,8 @@ function computeMoneyReport() {
 }
 
 // Har bir zborshik/labo bo'yicha, kunlar kesimida qaysi zakazlar (nomlari) berilganini yig'ish
-function computePeopleReport(getKey, getMeta) {
-  const rangeDates = reportRangeDates();
+function computePeopleReport(getKey, getMeta, dateList) {
+  const rangeDates = dateList || reportRangeDates();
   const map = new Map();
   loads.forEach((l) => {
     const key = getKey(l);
@@ -798,10 +890,16 @@ function renderReport() {
   const zb = computePeopleReport((l) => l.zborshik?.id, (l) => `${l.zborshik.ism}${l.zborshik.telefon ? ' — ' + l.zborshik.telefon : ''}`);
   const lb = computePeopleReport((l) => l.labo?.id, (l) => `${l.labo.raqami} — ${l.labo.haydovchi}${l.labo.telefon ? ' — ' + l.labo.telefon : ''}`);
 
+  const zborshikOptions = zborshiklar.map((z) => `<option value="${z.id}">${escapeHtml(z.ism)}</option>`).join('');
+  const laboOptions = labolar.map((l) => `<option value="${l.id}">${escapeHtml(l.raqami)} — ${escapeHtml(l.haydovchi)}</option>`).join('');
+
   document.getElementById('reportBody').innerHTML = `
-    <h3 class="report-subhead">💰 Astatka / Kassa (7 kunlik)</h3>
+    <div class="report-print-head">
+      <h3 class="report-subhead" style="margin:0;">💰 Astatka / Kassa (7 kunlik)</h3>
+      <button class="ghost-btn small-btn" id="printKassaReportBtn">🖨️ Shu jadvalni chop etish</button>
+    </div>
     <table class="report-table">
-      <thead><tr><th>Kun</th><th>Zakazlar</th><th>Kutilayotgan astatka</th><th>Kassa (pul olingan)</th></tr></thead>
+      <thead><tr><th>Kun</th><th>Zakazlar</th><th>Kutilayotgan astatka</th><th>Kassa (pul kirimi)</th></tr></thead>
       <tbody>${moneyRows}</tbody>
       <tfoot>
         <tr>
@@ -813,8 +911,8 @@ function renderReport() {
       </tfoot>
     </table>
     <p class="report-note">
-      "Kutilayotgan astatka" — hali "pul olindi" deb belgilanmagan zakazlarning qoldiq summasi.
-      "Kassa" — aynan shu kunda "💰 Pul olindi" tugmasi orqali qabul qilingan pul.
+      "Kutilayotgan astatka" — hali to'liq to'lanmagan zakazlarning qoldiq summasi.
+      "Kassa" — aynan shu kunda kiritilgan to'lovlar (qisman yoki to'liq) yig'indisi.
     </p>
 
     <h3 class="report-subhead">🧰 Zborshiklar nima qildi (7 kunlik)</h3>
@@ -822,11 +920,88 @@ function renderReport() {
 
     <h3 class="report-subhead">🚚 Labo / haydovchilar nima tashidi (7 kunlik)</h3>
     ${renderPeopleNarrative(lb, '🚚', "Bu 7 kunda labo biriktirilgan zakaz yo'q")}
+
+    <h3 class="report-subhead">🖨️ 1 oylik shaxsiy hisobot (har biriga alohida chop etish)</h3>
+    <div class="quick-assign-row">
+      <label style="flex:1;">Zborshik
+        <select id="reportZborshikSelect">${zborshikOptions || '<option value="">— hali zborshik yo\'q —</option>'}</select>
+      </label>
+      <button class="ghost-btn small-btn" id="printZborshikReportBtn">🖨️ Chop etish</button>
+    </div>
+    <div class="quick-assign-row">
+      <label style="flex:1;">Labo / haydovchi
+        <select id="reportLaboSelect">${laboOptions || '<option value="">— hali labo yo\'q —</option>'}</select>
+      </label>
+      <button class="ghost-btn small-btn" id="printLaboReportBtn">🖨️ Chop etish</button>
+    </div>
   `;
   document.getElementById('reportModal').classList.remove('hidden');
+
+  document.getElementById('printKassaReportBtn').onclick = () => printKassaReport(days, umumiy);
+  document.getElementById('printZborshikReportBtn').onclick = () => {
+    const id = document.getElementById('reportZborshikSelect').value;
+    const z = zborshiklar.find((x) => x.id === id);
+    if (!z) return;
+    printPersonMonthlyReport('zborshik', z, `${z.ism}${z.telefon ? ' — ' + z.telefon : ''}`);
+  };
+  document.getElementById('printLaboReportBtn').onclick = () => {
+    const id = document.getElementById('reportLaboSelect').value;
+    const l = labolar.find((x) => x.id === id);
+    if (!l) return;
+    printPersonMonthlyReport('labo', l, `${l.raqami} — ${l.haydovchi}${l.telefon ? ' — ' + l.telefon : ''}`);
+  };
 }
 
 document.getElementById('reportBtn').onclick = renderReport;
+
+// Kassa (7 kunlik) jadvalini chop etish
+function printKassaReport(days, umumiy) {
+  const rows = days.map((d) => `
+    <tr>
+      <td>${d.dayName} (${fmtShort(new Date(d.iso))})</td>
+      <td>${d.soni}</td>
+      <td>${fmtMoney(d.astatkaKutilmoqda)}</td>
+      <td>${fmtMoney(d.kassa)}</td>
+    </tr>`).join('');
+  document.getElementById('printArea').innerHTML = `
+    <h1>Kassa hisoboti — oxirgi 7 kun</h1>
+    <table class="print-table">
+      <tr><td>Kun</td><td>Zakazlar</td><td>Kutilayotgan astatka</td><td>Kassa (kirim)</td></tr>
+      ${rows}
+      <tr><td><b>Jami</b></td><td><b>${umumiy.soni}</b></td><td><b>${fmtMoney(umumiy.astatkaKutilmoqda)}</b></td><td><b>${fmtMoney(umumiy.kassa)}</b></td></tr>
+    </table>
+  `;
+  window.print();
+}
+
+// Bitta zborshik yoki labo uchun 1 oylik hisobotni chop etish
+function printPersonMonthlyReport(type, person, personLabel) {
+  const dateList = monthlyRangeDates();
+  const getKey = type === 'zborshik' ? (l) => l.zborshik?.id : (l) => l.labo?.id;
+  const relevantLoads = loads.filter((l) => getKey(l) === person.id && dateList.includes(l.sana));
+
+  const rows = relevantLoads
+    .sort((a, b) => a.sana.localeCompare(b.sana))
+    .map((l) => `
+      <tr>
+        <td>${l.sana}</td>
+        <td>${escapeHtml(l.nomi || '—')}</td>
+        <td>${escapeHtml(l.filial?.nomi || '—')}</td>
+        <td>${escapeHtml(l.manzil?.hudud || '—')}</td>
+        <td>${HOLAT_LABEL[l.holat] || l.holat}</td>
+      </tr>`).join('');
+
+  document.getElementById('printArea').innerHTML = `
+    <h1>${type === 'zborshik' ? '🧰 Zborshik' : '🚚 Labo/haydovchi'} hisoboti — oxirgi 30 kun</h1>
+    <p><b>${escapeHtml(personLabel)}</b></p>
+    <table class="print-table">
+      <tr><td><b>Sana</b></td><td><b>Buyurtma</b></td><td><b>Filial</b></td><td><b>Hudud</b></td><td><b>Holat</b></td></tr>
+      ${rows || '<tr><td colspan="5">Bu davrda biriktirilgan zakaz yo\'q</td></tr>'}
+    </table>
+    <p style="margin-top:14px;"><b>Jami: ${relevantLoads.length} ta zakaz</b></p>
+  `;
+  window.print();
+}
 
 // ---------------- Kun-kun surish ----------------
 document.getElementById('prevWeek').onclick = () => { currentStart = addDays(currentStart, -1); renderWeekLabel(); renderBoard(); };
@@ -839,10 +1014,12 @@ async function boot() {
   await fetchTaxonomy();
   await fetchZborshiklar();
   await fetchLabolar();
+  await fetchFiliallar();
   populateCategories('');
   populateColors('');
   populateZborshiklar(zborshikSelect, '');
   populateLabolar(laboSelect, '');
+  populateFiliallar(filialSelect, '');
   await refresh();
 }
 boot().catch(() => showToast('Serverga ulanishda xatolik', true));

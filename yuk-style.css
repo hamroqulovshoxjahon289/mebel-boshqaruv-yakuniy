@@ -291,6 +291,12 @@ body {
   border-radius: 999px;
 }
 
+.paid-badge.partial {
+  color: #fbbf24;
+  background: #fbbf241a;
+  border-color: #fbbf2444;
+}
+
 .load-card-top {
   display: flex;
   justify-content: space-between;
@@ -527,6 +533,7 @@ form > .field-row:first-child { }
 .dot.qizil { background: var(--red); }
 .dot.sariq { background: var(--yellow); }
 .dot.tolandi { background: var(--paid); }
+.dot.qisman { background: #fbbf24; }
 .dot.kutilmoqda { background: var(--text-faint); }
 
 /* ---------- Toast ---------- */

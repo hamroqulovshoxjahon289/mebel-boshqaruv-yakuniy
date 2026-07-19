@@ -137,6 +137,13 @@
         </label>
       </div>
 
+      <div class="section-label">Filial</div>
+      <div class="field-row">
+        <label>Qaysi filialga tegishli
+          <select id="f_filial"></select>
+        </label>
+      </div>
+
       <div class="section-label">Yuklovchi jamoa</div>
       <div class="field-row">
         <label>Zborshik
@@ -209,7 +216,18 @@
       <button class="danger-btn" id="deleteLoadBtn">O'chirish</button>
       <button class="ghost-btn" id="printLoadBtn">🖨️ Chop etish</button>
       <button class="ghost-btn" id="editLoadBtn">Tahrirlash</button>
-      <button class="pay-btn" id="payLoadBtn">💰 Pul olindi</button>
+    </div>
+
+    <div class="quick-assign" id="paymentSection">
+      <div class="quick-assign-row">
+        <label style="width:100%;">💰 To'lov (kassa)</label>
+      </div>
+      <div id="paymentHistory" class="payment-history"></div>
+      <div class="quick-assign-row" id="paymentInputRow">
+        <input type="number" id="paymentAmountInput" placeholder="Summani kiriting (so'm)" min="1" />
+        <input type="text" id="paymentCodeInput" placeholder="Kod" style="max-width:100px;" />
+        <button class="pay-btn" id="payLoadBtn">💰 To'lov qo'shish</button>
+      </div>
     </div>
   </div>
 </div>
@@ -230,6 +248,10 @@
       <select id="teamColorCatSelect" style="margin-bottom:8px;"></select>
       <div id="teamColorList" class="team-list"></div>
       <button class="ghost-btn" id="teamAddColorBtn">➕ Yangi rang qo'shish</button>
+
+      <div class="section-label" style="margin-top:20px">🏢 Filiallar</div>
+      <div id="teamFilialList" class="team-list"></div>
+      <button class="ghost-btn" id="teamAddFilialBtn">➕ Yangi filial qo'shish</button>
 
       <div class="section-label" style="margin-top:20px">🧰 Zborshiklar</div>
       <div id="teamZborshikList" class="team-list"></div>
